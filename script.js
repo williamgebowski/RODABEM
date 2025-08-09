@@ -320,16 +320,26 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('form-contato')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const nome = fd.get('nome') || '';
+    const mensagem = fd.get('mensagem') || '';
+    
+    // Validação básica
+    if (!nome || !mensagem) {
+        alert('Por favor, preencha o nome e a mensagem.');
+        return;
+    }
+    
     openWhatsApp({
         source: 'contato',
         formData: {
-            nome: fd.get('nome') || '',
-            email: fd.get('email') || '',
-            tel: fd.get('telefone') || '',
+            nome: nome,
             serv: 'Contato',
-            obs: fd.get('mensagem') || ''
+            obs: mensagem
         }
     });
+    
+    // Reset do formulário
+    e.currentTarget.reset();
 });
 
 
