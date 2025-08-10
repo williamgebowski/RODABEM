@@ -1,4 +1,4 @@
-const WHATS_NUMBER = '555135613184';
+const WHATS_NUMBER = '5551980406481';
 
 function openWhatsApp({source='site', formData=null} = {}) {
     let message = 'Olá! Preciso de ajuda com meu carro.';
@@ -38,65 +38,8 @@ const trapFocus = (container, first, last, e) => {
 };
 
 // 3) JS — montar overlay e wiring do menu (idempotente)
-document.addEventListener('DOMContentLoaded', () => {
-  const menuToggle = qs('.menu-toggle');
-  const navList = qs('.nav-list');
-
-  if (menuToggle && navList && !menuToggle.__wired) {
-    // Criar overlay uma vez
-    let overlay = qs('.nav-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.className = 'nav-overlay';
-      document.body.appendChild(overlay);
-    }
-
-    const links = qsa('.nav-link', navList);
-    const setOpen = (open) => {
-      menuToggle.setAttribute('aria-expanded', String(open));
-      navList.classList.toggle('active', open);
-      overlay.classList.toggle('active', open);
-      document.body.classList.toggle('nav-open', open);
-
-      if (open) {
-        // Focus trap
-        const focusables = qsa('a,button,[tabindex]:not([tabindex="-1"])', navList)
-          .filter(el => !el.hasAttribute('disabled'));
-        const first = focusables[0] || navList;
-        const last = focusables[focusables.length - 1] || navList;
-        first.focus();
-
-        const onKeydown = (e) => {
-          if (e.key === 'Escape') {
-            setOpen(false);
-            return;
-          }
-          trapFocus(navList, first, last, e);
-        };
-        navList.__trapHandler = onKeydown;
-        document.addEventListener('keydown', onKeydown);
-      } else {
-        if (navList.__trapHandler) {
-          document.removeEventListener('keydown', navList.__trapHandler);
-          navList.__trapHandler = null;
-        }
-      }
-    };
-
-    menuToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const open = menuToggle.getAttribute('aria-expanded') === 'true';
-      setOpen(!open);
-    });
-
-    overlay.addEventListener('click', () => setOpen(false));
-    document.addEventListener('click', (e) => {
-      if (!navList.contains(e.target) && !menuToggle.contains(e.target)) setOpen(false);
-    });
-    links.forEach(a => a.addEventListener('click', () => setOpen(false)));
-
-    menuToggle.__wired = true;
-  }
+// ===== MENU MOBILE: drawer dedicado (id="mobile-menu") =====
+// Drawer mobile removido; nenhum handler necessário
 
   // 4) JS — rolagem suave + compensação e destaque de link ativo
   // Rolagem suave em links internos (com compensação do header via CSS scroll-margin-top)
@@ -136,6 +79,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Inicialização quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', function() {
+    // Sincronizar telefone exibido com o número do WhatsApp
+    try {
+        const raw = (WHATS_NUMBER || '').replace(/\D+/g, '');
+        let num = raw;
+        if (raw.startsWith('55')) num = raw.slice(2); // remove código do Brasil
+        const ddd = num.slice(0, 2);
+        const rest = num.slice(2);
+        let pretty = '';
+        if (rest.length === 8) {
+            pretty = `(${ddd}) ${rest.slice(0,4)}-${rest.slice(4)}`;
+        } else if (rest.length === 9) {
+            pretty = `(${ddd}) ${rest.slice(0,5)}-${rest.slice(5)}`;
+        } else {
+            pretty = `(${ddd}) ${rest}`;
+        }
+        const phoneLink = document.getElementById('link-phone');
+        if (phoneLink) {
+            phoneLink.href = `https://wa.me/${raw}?text=${encodeURIComponent('Olá! Preciso de ajuda com meu carro.')}&utm_source=site&utm_medium=contato&utm_campaign=whatsapp`;
+            phoneLink.textContent = pretty;
+        }
+    } catch (_) {}
     // Anexa UTM dos data attributes (se houver)
     document.querySelectorAll('a[href*="wa.me"]').forEach(a => {
         const utm = a.getAttribute('data-utm');
